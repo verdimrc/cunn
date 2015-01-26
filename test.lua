@@ -3078,6 +3078,50 @@ function cunntest.VolumetricConvolution_backward_batch()
    mytester:assertlt(berror:abs():max(), precision_backward, 'error on bias (backward) ')
 end
 
+function cunntest.VolumetricMaxPooling_forward()
+   local from = math.random(1,64)
+   local to = from
+   local ki = math.random(2,4)
+   local kj = math.random(2,4)
+   local kk = math.random(2,4)
+   local si = math.random(1,4)
+   local sj = math.random(1,4)
+   local sk = math.random(1,4)
+   local outi = math.random(8,16)
+   local outj = math.random(8,16)
+   local outk = math.random(8,16)
+   local ini = (outi-1)*si+ki
+   local inj = (outj-1)*sj+kj
+   local ink = (outk-1)*sk+kk
+
+   local tm = {}
+   local title = string.format('VolumetricMaxPooling.forward %dx%dx%d o %dx%d -> %dx%dx%d',
+                               from, inj, ini, kj, ki, to, outj, outi)
+   times[title] = tm
+
+   local input = torch.randn(from,ini,ink,inj)
+   local sconv = nn.VolumetricMaxPooling(ki,kj,kk,si,sj,sk)
+   local groundtruth = sconv:forward(input)
+   local a = torch.Timer()
+   for i = 1,nloop do
+      groundtruth = sconv:forward(input)
+   end
+   tm.cpu = a:time().real
+
+   input = input:cuda()
+   local gconv = nn.VolumetricMaxPooling(ki,kj,kk,si,sj,sk):cuda()
+   local rescuda = gconv:forward(input)
+   a:reset()
+   for i = 1,nloop do
+      rescuda = gconv:forward(input)
+   end
+   cutorch.synchronize()
+   tm.gpu = a:time().real
+
+   local error = rescuda:float() - groundtruth
+   mytester:assertlt(error:abs():max(), precision_forward, 'error on state (forward) ')
+end
+
 function cunntest.CMul_forward_batch()
    local bs = math.random(8,32)
    local nini = math.random(1,100)
@@ -3150,10 +3194,10 @@ function cunntest.CMul_backward_batch()
    tm.gpu = a:time().real
 
    local weightcuda = gconv.gradWeight
-   
+
    local error = rescuda:float() - groundgrad
    local werror = weightcuda:float() - groundweight
-   
+
    mytester:assertlt(error:abs():max(), precision_backward, 'error on state (backward) ')
    mytester:assertlt(werror:abs():max(), precision_backward, 'error on weight (backward) ')
 end
@@ -3165,7 +3209,7 @@ function nn.testcuda(tests, print_timing)
    math.randomseed(os.time())
    mytester = torch.Tester()
    mytester:add(cunntest)
-   mytester:run(tests)
+   mytester:run('VolumetricMaxPooling_forward')
    torch.setdefaulttensortype(oldtype)
    if print_timing then
        print ''
@@ -3179,3 +3223,5 @@ function nn.testcuda(tests, print_timing)
        print ' ------------------------------------------------------------------------------------------------'
    end
 end
+
+nn.testcuda()

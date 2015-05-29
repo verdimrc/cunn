@@ -159,12 +159,12 @@ static int cunn_VolumetricConvolution_updateOutput(lua_State *L) {
   // Input
   THCudaTensor *input = (THCudaTensor*)luaT_checkudata(L, 2, "torch.CudaTensor");
   // Params:
-  int dD = luaT_getfieldcheckint(L, 1, "dW");
-  int dW = luaT_getfieldcheckint(L, 1, "dH");
-  int dH = luaT_getfieldcheckint(L, 1, "dT");
-  int kD = luaT_getfieldcheckint(L, 1, "kW");
-  int kW = luaT_getfieldcheckint(L, 1, "kH");
-  int kH = luaT_getfieldcheckint(L, 1, "kT");
+  int dD = luaT_getfieldcheckint(L, 1, "dT");
+  int dW = luaT_getfieldcheckint(L, 1, "dW");
+  int dH = luaT_getfieldcheckint(L, 1, "dH");
+  int kD = luaT_getfieldcheckint(L, 1, "kT");
+  int kW = luaT_getfieldcheckint(L, 1, "kW");
+  int kH = luaT_getfieldcheckint(L, 1, "kH");
   int nInputPlane = luaT_getfieldcheckint(L, 1, "nInputPlane");
   int nOutputPlane = luaT_getfieldcheckint(L, 1, "nOutputPlane");
 
